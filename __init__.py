@@ -16,9 +16,11 @@ def initialize(rhapi: RHAPI):
     rhapi.events.on(Evt.STARTUP, lalligueta.init_plugin)
     
     rhapi.events.on(Evt.PILOT_ADD, lalligueta.get_pilot_video_systems)
-    rhapi.events.on(Evt.PILOT_ALTER, lalligueta.get_pilot_video_systems)
+    rhapi.events.on(Evt.PILOT_ALTER, lalligueta.get_pilot_video_systems, name="alter_update", priority=45)
     rhapi.events.on(Evt.PILOT_DELETE, lalligueta.get_pilot_video_systems)
     
+    rhapi.events.on(Evt.PILOT_ALTER, lalligueta.draw_judges_pannel, name="alter_draw", priority=46)
+
     rhapi.events.on(Evt.CLASS_ADD, lalligueta.draw_judges_pannel)
     rhapi.events.on(Evt.CLASS_ALTER, lalligueta.draw_judges_pannel)
     rhapi.events.on(Evt.CLASS_DUPLICATE, lalligueta.draw_judges_pannel)
