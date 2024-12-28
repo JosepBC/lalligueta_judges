@@ -28,8 +28,6 @@ def initialize(rhapi: RHAPI):
     rhapi.events.on(Evt.HEAT_ALTER, lalligueta.draw_judges_pannel)
     rhapi.events.on(Evt.HEAT_DUPLICATE, lalligueta.draw_judges_pannel)
     rhapi.events.on(Evt.HEAT_DELETE, lalligueta.draw_judges_pannel)
-    rhapi.events.on(Evt.HEAT_GENERATOR_INITIALIZE, lalligueta.draw_judges_pannel)
-    rhapi.events.on(Evt.HEAT_SET, lalligueta.draw_judges_pannel)
 
 
 
