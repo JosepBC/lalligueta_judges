@@ -66,7 +66,7 @@ class LaLliguetaJudges():
         print("----------")
 
         # Panel definition in format page, allways open
-        ui.register_panel("testing", "Pilots With Video", "format", open=True)
+        ui.register_panel("judges", "Judges", "format", open=True)
 
         frequencies = json.loads(db.frequencysets[0].frequencies)
         num_frequencies = 0
@@ -81,7 +81,7 @@ class LaLliguetaJudges():
         for raceclass in db.raceclasses:
             rc_name = raceclass.name
             # Add section for that class
-            ui.register_markdown("testing", "header_"+str(rc_name), "# "+str(rc_name))
+            ui.register_markdown("judges", "header_"+str(rc_name), "# "+str(rc_name))
 
             # Get all heats of that class
             heat: Heat
@@ -135,7 +135,7 @@ class LaLliguetaJudges():
                 heat_md += "</table>\n"
         
                 # Add table as markdown
-                ui.register_markdown("testing", "heat_"+str(heat.id), heat_md)
+                ui.register_markdown("judges", "heat_"+str(heat.id), heat_md)
         print("----------")
 
 
