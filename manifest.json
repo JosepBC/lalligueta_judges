@@ -1,0 +1,13 @@
+{
+    "name": "La Lligueta: Judges",
+    "author": "Josep Bello",
+    "author_uri": "https://lalligueta.com/",
+    "description": "Assign judge to each pilot on each heat depending on the video system of the pilot",
+    "info_uri": "https://github.com/JosepBC/lalligueta_judges/",
+    "license": "MIT",
+    "license_uri": "https://github.com/JosepBC/lalligueta_judges/blob/main/LICENSE",
+    "version": "0.0.0",
+    "required_rhapi_version": "1.0",
+    "update_uri": null,
+    "text_domain": null
+}
