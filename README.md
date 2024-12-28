@@ -8,10 +8,10 @@ In the Catalan drone racing league [La Lligueta](https://lalligueta.com/) we hav
 
 ## Judges Algorithm
 Assign a judge to every pilot on every heat with the following algorithm:
-    - From all the pilots in the database remove those that participate in the heat (pilots and other judges)
-    - If no there are no pilots remaining show DVR
-    - If another pilot with the same system is found, assign it
-    - Otherwise randomly select a pilot to spectate in 3d person
+- From all the pilots in the database remove those that participate in the heat (pilots and other judges)
+- If no there are no pilots remaining show DVR
+- If another pilot with the same system is found, assign it
+- Otherwise randomly select a pilot to spectate in 3d person
 
 ## Examples
 First define the video system under Format -> Pilot
