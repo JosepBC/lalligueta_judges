@@ -56,15 +56,9 @@ class LaLliguetaJudges():
         print("-----")
         pilot: Pilot
         for pilot in db.pilots:
-            for atribute in db.pilot_attributes(pilot):
-                if atribute.name == "video_system":
-                    print(pilot.callsign+" uses video system " +atribute.value)
-                    self._pilot_system[pilot.callsign] = atribute.value
-            
-            # If pilot didn't have this attribute asume analog
-            if pilot.callsign not in self._pilot_system:
-                self._pilot_system[pilot.callsign] = "Analog"
-                print(pilot.callsign+" uses video default system " +atribute.value)
+            videosystem = db.pilot_attribute_value(pilot, "video_system")
+            print(pilot.callsign+" uses video system " +videosystem)
+            self._pilot_system[pilot.callsign] = videosystem
         print("-----")
 
         print(self._pilot_system)
