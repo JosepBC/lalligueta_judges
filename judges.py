@@ -81,19 +81,29 @@ class LaLliguetaJudges():
         video_system_field = UIField('video_system', "Video System", UIFieldType.SELECT, options=supported_video_systems, value="Analog")
         fields.register_pilot_attribute(video_system_field)
 
+    def getRaceChannels(self):
+        frequencies = self._rhapi.race.frequencyset.frequencies
+        freq = json.loads(frequencies)
+        bands = freq["b"]
+        channels = freq["c"]
+        racechannels = []
+        for i, band in enumerate(bands):
+            racechannel = "0"
+            if str(band) == 'None':
+                racechannels.insert(i,racechannel)
+            else:
+                channel = channels[i]
+                racechannel = str(band) + str(channel)
+                racechannels.insert(i,racechannel)
+
+        return racechannels
+
     def draw_judges_pannel(self, args=None):
         ui = self._rhapi.ui
         db = self._rhapi.db
 
         # Panel definition in format page, allways open
         ui.register_panel("judges", "Judges", "format", open=True)
-
-        frequencies = json.loads(db.frequencysets[0].frequencies)
-        num_frequencies = 0
-        for band in frequencies["b"]:
-            if band is not None:
-                num_frequencies += 1
-
 
         raceclass: RaceClass
         print("----------")
@@ -108,7 +118,8 @@ class LaLliguetaJudges():
             heat: Heat
             for heat in db.heats_by_class(raceclass.id):
                 print(heat.name)
-                freq_i = 0
+                racechannels = self.getRaceChannels()
+
 
                 # Header of the heat
                 heat_md = "## "+str(heat.name)+"\n"
@@ -123,15 +134,14 @@ class LaLliguetaJudges():
                 for slot in db.slots_by_heat(heat.id):
                     pilot = db.pilot_by_id(slot.pilot_id)
                     if pilot is not None:
-                        heat_pilots.append(pilot)
+                        channel = racechannels[slot.node_index]
+                        heat_pilots.append((pilot, channel))
                         heat_pilots_ids.append(pilot.id)
 
                 pilot: Pilot
-                for pilot in heat_pilots:
+                for pilot, channel in heat_pilots:
                     # Get frequency of the pilot
-                    freq_print = str(frequencies["b"][freq_i])+str(frequencies["c"][freq_i])
-                    freq_i+=1
-                    freq_i%num_frequencies
+                    freq_print = channel
 
                     # For heats with auto frequency and not confirmed we don't know the frequency
                     if heat.auto_frequency and heat.status != HeatStatus.CONFIRMED:
