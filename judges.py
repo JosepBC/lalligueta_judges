@@ -13,6 +13,10 @@ class LaLliguetaJudges():
         self._rhapi = rhapi
         self._pilot_system = {}
 
+        self._channel_correspondence = {"Walksnail":{"R1": "R1", "R2": "R2", "R4": "R4", "R7":"WR6", "R8": "WR7"},
+                                       "DJI":{"R1": "P1", "R2": "P2", "R4": "P4", "R7":"P6", "R8": "P7"},
+                                       "DJIO3":{"R1": "P1", "R2": "P2", "R4": "P3", "R7":"P6", "R8":"P7"}}
+
     def assign_judge_pilot(self, pilot: Pilot, heat_pilots_id: list):
         judge = None
         randomly_selected = False
@@ -134,8 +138,9 @@ class LaLliguetaJudges():
 
                 pilot: Pilot
                 for pilot, channel in heat_pilots:
-                    # Get frequency of the pilot
+                    # Get frequency and video system of the pilot
                     freq_print = channel
+                    pilot_video_system = self._pilot_system[pilot.callsign]
 
                     # For heats with auto frequency and not confirmed we don't know the frequency
                     if heat.auto_frequency and heat.status != HeatStatus.CONFIRMED:
@@ -155,7 +160,13 @@ class LaLliguetaJudges():
                     # If it has been randomly selected it means that needs to be in 3rd Person
                     if randomly_selected:
                         judge += " (3rd)"
-                    heat_md += "<tr><td>"+freq_print+"</td><td>"+pilot.callsign+"</td><td>"+judge+"</td><td>"+self._pilot_system[pilot.callsign]+"</td>\n"
+
+                    # If video system is in the correspondence change the freq print to match system
+                    if pilot_video_system in self._channel_correspondence:
+                        print("Pilot "+pilot.callsign+" raceband channel "+freq_print+" may not correspond to it's system " +pilot_video_system)
+                        freq_print = self._channel_correspondence[pilot_video_system][freq_print]
+
+                    heat_md += "<tr><td>"+freq_print+"</td><td>"+pilot.callsign+"</td><td>"+judge+"</td><td>"+pilot_video_system+"</td>\n"
                 print("++++++++++++")
                 # Close table
                 heat_md += "</table>\n"
