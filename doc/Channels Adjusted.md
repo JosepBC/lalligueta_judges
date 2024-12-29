@@ -1,6 +1,6 @@
 # Channels visualization
 ## Auto frequency heats
-For those heats that are configured as auto frequency but they are not seeded yet, we show a *NC* as channel.
+For those heats that are configured as auto frequency but they are not seeded yet, we show a *NC* as channel and judge.
 ![](img/Non%20seeded%20auto%20frequency.png)
 
 And once the frequencies are assigned we show the frequency
