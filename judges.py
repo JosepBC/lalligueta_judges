@@ -1,5 +1,6 @@
 import RHData
 import gevent
+from enum import Enum
 import json
 import random
 from eventmanager import Evt
@@ -8,7 +9,19 @@ from RHUI import UIField, UIFieldType, UIFieldSelectOption
 from Database import PilotAttribute, Pilot, RaceClass, Heat, HeatNode, Profiles, HeatStatus
 from RHAPI import RHAPI
 
+class HeatPilot():
+    def __init__(self, pilot: Pilot, channel: str, judge: Pilot):
+        self.pilot = pilot
+        self.channel = channel
+        self.judge = judge
+
 class LaLliguetaJudges():
+
+    class JudgeAssignationError(Enum):
+        OUT_OF_CANDIDATES = 0
+        NO_JUDGE_SAME_VIDEO_SYSTEM = 1
+
+
     def __init__(self, rhapi: RHAPI):
         self._rhapi = rhapi
         self._pilot_system = {}
@@ -17,9 +30,21 @@ class LaLliguetaJudges():
                                        "DJI":{"R1": "P1", "R2": "P2", "R4": "P4", "R7":"P6", "R8": "P7"},
                                        "DJIO3":{"R1": "P1", "R2": "P2", "R4": "P3", "R7":"P6", "R8":"P7"}}
 
-    def assign_judge_pilot(self, pilot: Pilot, heat_pilots_id: list):
-        judge = None
-        randomly_selected = False
+    def assign_random_judge_pilot(self, heat_pilots_id: list):
+        db = self._rhapi.db
+
+        all_possible_judges = []
+        # Remove heat pilots from possible judges
+        for p in db.pilots:
+            if p.id not in heat_pilots_id:
+                all_possible_judges.append(p)
+
+        if len(all_possible_judges) == 0:
+            return self.JudgeAssignationError.OUT_OF_CANDIDATES
+
+        return random.choice(all_possible_judges)
+
+    def assign_judge_pilot_same_system(self, pilot: Pilot, heat_pilots_id: list):
         db = self._rhapi.db
 
         all_possible_judges = []
@@ -30,23 +55,93 @@ class LaLliguetaJudges():
 
         # If all pilots are in this heat there is no available judge
         if len(all_possible_judges) == 0:
-            return None, False
+            return self.JudgeAssignationError.OUT_OF_CANDIDATES
 
         # Try to assign as judge a pilot with the same video system
         possible_judge: Pilot
         for possible_judge in all_possible_judges:
             if self._pilot_system[possible_judge.callsign] == self._pilot_system[pilot.callsign]:
-                judge = possible_judge
-                break
+                return possible_judge
+
+        return self.JudgeAssignationError.NO_JUDGE_SAME_VIDEO_SYSTEM
+
+
+    def find_judge_same_system(self, heat_pilots: list, heat_pilots_ids: list):
+        heat_pilot: HeatPilot
+        for heat_pilot in heat_pilots:
+            # Try to assign someone with same video system
+            judge_pilot = self.assign_judge_pilot_same_system(heat_pilot.pilot, heat_pilots_ids)
+
+            if judge_pilot == self.JudgeAssignationError.NO_JUDGE_SAME_VIDEO_SYSTEM:
+                print("No judge same video system for "+heat_pilot.pilot.callsign+", will try later")
+            elif judge_pilot == self.JudgeAssignationError.OUT_OF_CANDIDATES:
+                # If we are out of candidates just ask for DVR
+                heat_pilot.judge = Pilot()
+                heat_pilot.judge.callsign = "DVR"
+            else:
+                # Otherwise means that we have found a judge with the same video system
+                heat_pilots_ids.append(judge_pilot.id)
+                heat_pilot.judge = judge_pilot
+
+    def find_random_judge(self, heat_pilots: list, heat_pilots_ids: list):
+        heat_pilot: HeatPilot
+        for heat_pilot in heat_pilots:
+            # If we have already assigned a judge to this pilot, skip
+            if heat_pilot.judge is not None:
+                continue
+
+            # Otherwise randomly select another pilot in 3d person
+            judge_pilot = self.assign_random_judge_pilot(heat_pilots_ids)
+
+            if judge_pilot == self.JudgeAssignationError.OUT_OF_CANDIDATES:
+                # If there are no more pilots available, ask for DVR
+                heat_pilot.judge = Pilot()
+                heat_pilot.judge.callsign = "DVR"
+                print("We run out of judges in random, DVR for "+heat_pilot.pilot.callsign)
+            else:
+                # Judge randomly assigned
+                heat_pilots_ids.append(judge_pilot.id)
+                heat_pilot.judge = judge_pilot
+                heat_pilot.judge.callsign += " (3rd)"
+                print("No judge same video system for "+heat_pilot.pilot.callsign+", but found "+ heat_pilot.judge.callsign)
+
+    def draw_table(self, heat_pilots):
+        table_md = []
+        # By now everyone should have a judge, draw it
+        heat_pilot: HeatPilot
+        for heat_pilot in heat_pilots:
+            # Get video system of the pilot
+            pilot_video_system = self._pilot_system[heat_pilot.pilot.callsign]
+            pilot = heat_pilot.pilot
+            judge = heat_pilot.judge
+
+            # If video system is in the correspondence change the freq print to match system
+            if pilot_video_system in self._channel_correspondence:
+                if heat_pilot.channel in self._channel_correspondence[pilot_video_system]:
+                    # print("Pilot "+pilot.callsign+" raceband channel "+heat_pilot.channel+" may not correspond to it's system " +pilot_video_system)
+                    heat_pilot.channel = self._channel_correspondence[pilot_video_system][heat_pilot.channel]
+
+            table_md.append("<tr><td>"+heat_pilot.channel+"</td><td>"+pilot.callsign+"</td><td>"+judge.callsign+"</td><td>"+pilot_video_system+"</td>\n")
         
-        # If no possible judge with the same video system, randomly select a pilot
-        if judge is None:
-            judge = random.choice(all_possible_judges)
-            randomly_selected = True
-            print("No judge with same video system for "+pilot.callsign)
+        return table_md
 
-        return judge, randomly_selected
+    def get_heat_pilots_and_ids(self, heat: Heat, racechannels: list):
+        db = self._rhapi.db
 
+        heat_pilots = []
+        heat_pilots_ids = []
+
+        slot: HeatNode
+        for slot in db.slots_by_heat(heat.id):
+            pilot_slot: Pilot
+            pilot_slot = db.pilot_by_id(slot.pilot_id)
+            if pilot_slot is not None:
+                channel = racechannels[slot.node_index]
+                heat_pilot = HeatPilot(pilot_slot, channel, None)
+                heat_pilots.append(heat_pilot)
+                heat_pilots_ids.append(pilot_slot.id)
+
+        return heat_pilots, heat_pilots_ids
 
     def init_plugin(self, args):
         self.init_ui()
@@ -125,49 +220,28 @@ class LaLliguetaJudges():
                     heat_md += e+"\n"
                 
 
-                # Get all slots of the heat
-                slot: HeatNode
-                heat_pilots = []
-                heat_pilots_ids = []
-                for slot in db.slots_by_heat(heat.id):
-                    pilot = db.pilot_by_id(slot.pilot_id)
-                    if pilot is not None:
-                        channel = racechannels[slot.node_index]
-                        heat_pilots.append((pilot, channel))
-                        heat_pilots_ids.append(pilot.id)
+                # Get heat pilots and it's id
+                heat_pilots, heat_pilots_ids = self.get_heat_pilots_and_ids(heat, racechannels)
 
-                pilot: Pilot
-                for pilot, channel in heat_pilots:
-                    # Get frequency and video system of the pilot
-                    freq_print = channel
-                    pilot_video_system = self._pilot_system[pilot.callsign]
+                # For heats with auto frequency and not confirmed we don't know the frequency
+                if heat.auto_frequency and heat.status != HeatStatus.CONFIRMED:
+                    heat_pilot: HeatPilot
+                    for heat_pilot in heat_pilots:
+                        heat_pilot.channel = "NC"
+                        heat_pilot.judge = Pilot()
+                        heat_pilot.judge.callsign = "NC"
+                else:
+                    # First try to assign with same video system
+                    self.find_judge_same_system(heat_pilots, heat_pilots_ids)
 
-                    # For heats with auto frequency and not confirmed we don't know the frequency
-                    if heat.auto_frequency and heat.status != HeatStatus.CONFIRMED:
-                        freq_print = "NC"
-
-                    # print(freq_print + " " + pilot.callsign)
-                    judge_pilot, randomly_selected = self.assign_judge_pilot(pilot, heat_pilots_ids)
+                    # If we couldn't find someone with same video system and we had candidates, randomly select someone
+                    self.find_random_judge(heat_pilots, heat_pilots_ids)
                     
 
-                    if judge_pilot is not None:
-                        judge = judge_pilot.callsign
-                        # Add as heat pilot the judge
-                        heat_pilots_ids.append(judge_pilot.id)
-                    else:
-                        judge = "DVR"
+                # Finally draw the table for this heat
+                for line in self.draw_table(heat_pilots):
+                    heat_md += line
 
-                    # If it has been randomly selected it means that needs to be in 3rd Person
-                    if randomly_selected:
-                        judge += " (3rd)"
-
-                    # If video system is in the correspondence change the freq print to match system
-                    if pilot_video_system in self._channel_correspondence:
-                        if freq_print in self._channel_correspondence[pilot_video_system]:
-                            print("Pilot "+pilot.callsign+" raceband channel "+freq_print+" may not correspond to it's system " +pilot_video_system)
-                            freq_print = self._channel_correspondence[pilot_video_system][freq_print]
-
-                    heat_md += "<tr><td>"+freq_print+"</td><td>"+pilot.callsign+"</td><td>"+judge+"</td><td>"+pilot_video_system+"</td>\n"
                 print("++++++++++++")
                 # Close table
                 heat_md += "</table>\n"
