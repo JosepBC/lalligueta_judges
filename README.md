@@ -4,7 +4,7 @@ In the Catalan drone racing league [La Lligueta](https://lalligueta.com/) we hav
 
 ## Features
 - Define the video system of each pilot when creating the pilots
-- Visualize the channel (more on that [here](doc/Channel%20Adjusted.md)), pilot, judge and video system in the Format tab
+- Visualize the channel (more on that [here](doc/Channels%20Adjusted.md)), pilot, judge and video system in the Format tab
 
 ## Judges Algorithm
 Assign a judge to every pilot on every heat with the following algorithm:
