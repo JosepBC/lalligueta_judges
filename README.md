@@ -4,7 +4,7 @@ In the Catalan drone racing league [La Lligueta](https://lalligueta.com/) we hav
 
 ## Features
 - Define the video system of each pilot when creating the pilots
-- Visualize the channel, pilot, judge and video system in the Format tab
+- Visualize the channel (more on that [here](doc/Channel%20Adjusted.md)), pilot, judge and video system in the Format tab
 
 ## Judges Algorithm
 Assign a judge to every pilot on every heat with the following algorithm:
@@ -25,4 +25,8 @@ Then define your class and it's heats normaly.
 
 Finaly, go to Format -> Judges and you will see the assignation of the judges.
 
-![Judges assignation](doc/Judges.png)
+> [!TIP]
+>Go to the [channels adjusted](doc/Channels%20Adjusted.md) document to understand what the options are in the *Channel* column
+
+
+![Judges assignation](doc/img/Judges.png)
