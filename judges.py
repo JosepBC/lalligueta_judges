@@ -163,8 +163,9 @@ class LaLliguetaJudges():
 
                     # If video system is in the correspondence change the freq print to match system
                     if pilot_video_system in self._channel_correspondence:
-                        print("Pilot "+pilot.callsign+" raceband channel "+freq_print+" may not correspond to it's system " +pilot_video_system)
-                        freq_print = self._channel_correspondence[pilot_video_system][freq_print]
+                        if freq_print in self._channel_correspondence[pilot_video_system]:
+                            print("Pilot "+pilot.callsign+" raceband channel "+freq_print+" may not correspond to it's system " +pilot_video_system)
+                            freq_print = self._channel_correspondence[pilot_video_system][freq_print]
 
                     heat_md += "<tr><td>"+freq_print+"</td><td>"+pilot.callsign+"</td><td>"+judge+"</td><td>"+pilot_video_system+"</td>\n"
                 print("++++++++++++")
