@@ -30,12 +30,12 @@ class LaLliguetaJudges():
                                        "DJI":{"R1": "P1", "R2": "P2", "R4": "P4", "R7":"P6", "R8": "P7"},
                                        "DJIO3":{"R1": "P1", "R2": "P2", "R4": "P3", "R7":"P6", "R8":"P7"}}
 
-    def assign_random_judge_pilot(self, heat_pilots_id: list):
+    def assign_random_judge_pilot(self, heat_pilots_id: list, potential_judges: list):
         db = self._rhapi.db
 
         all_possible_judges = []
         # Remove heat pilots from possible judges
-        for p in db.pilots:
+        for p in potential_judges:
             if p.id not in heat_pilots_id:
                 all_possible_judges.append(p)
 
@@ -44,12 +44,12 @@ class LaLliguetaJudges():
 
         return random.choice(all_possible_judges)
 
-    def assign_judge_pilot_same_system(self, pilot: Pilot, heat_pilots_id: list):
+    def assign_judge_pilot_same_system(self, pilot: Pilot, heat_pilots_id: list, potential_judges: list):
         db = self._rhapi.db
 
         all_possible_judges = []
         # Remove heat pilots from possible judges
-        for p in db.pilots:
+        for p in potential_judges:
             if p.id not in heat_pilots_id:
                 all_possible_judges.append(p)
 
@@ -66,11 +66,11 @@ class LaLliguetaJudges():
         return self.JudgeAssignationError.NO_JUDGE_SAME_VIDEO_SYSTEM
 
 
-    def find_judge_same_system(self, heat_pilots: list, heat_pilots_ids: list):
+    def find_judge_same_system(self, heat_pilots: list, heat_pilots_ids: list, potential_judges: list):
         heat_pilot: HeatPilot
         for heat_pilot in heat_pilots:
             # Try to assign someone with same video system
-            judge_pilot = self.assign_judge_pilot_same_system(heat_pilot.pilot, heat_pilots_ids)
+            judge_pilot = self.assign_judge_pilot_same_system(heat_pilot.pilot, heat_pilots_ids, potential_judges)
 
             if judge_pilot == self.JudgeAssignationError.NO_JUDGE_SAME_VIDEO_SYSTEM:
                 print("No judge same video system for "+heat_pilot.pilot.callsign+", will try later")
@@ -83,7 +83,7 @@ class LaLliguetaJudges():
                 heat_pilots_ids.append(judge_pilot.id)
                 heat_pilot.judge = judge_pilot
 
-    def find_random_judge(self, heat_pilots: list, heat_pilots_ids: list):
+    def find_random_judge(self, heat_pilots: list, heat_pilots_ids: list, potential_judges: list):
         heat_pilot: HeatPilot
         for heat_pilot in heat_pilots:
             # If we have already assigned a judge to this pilot, skip
@@ -91,7 +91,7 @@ class LaLliguetaJudges():
                 continue
 
             # Otherwise randomly select another pilot in 3d person
-            judge_pilot = self.assign_random_judge_pilot(heat_pilots_ids)
+            judge_pilot = self.assign_random_judge_pilot(heat_pilots_ids, potential_judges)
 
             if judge_pilot == self.JudgeAssignationError.OUT_OF_CANDIDATES:
                 # If there are no more pilots available, ask for DVR
@@ -143,6 +143,24 @@ class LaLliguetaJudges():
 
         return heat_pilots, heat_pilots_ids
 
+    def get_pilots_involved_in_raceclass(self, rc: RaceClass):
+        db = self._rhapi.db
+
+        pilots_raceclass = []
+
+        heat: Heat
+        # For each heat in the raceclass
+        for heat in db.heats_by_class(rc.id):
+            # For each slot in the heat, get pilot
+            slot: HeatNode
+            for slot in db.slots_by_heat(heat.id):
+                pilot_slot = db.pilot_by_id(slot.pilot_id)
+                if pilot_slot is not None:
+                    pilots_raceclass.append(pilot_slot)
+
+        return pilots_raceclass
+
+
     def init_plugin(self, args):
         self.init_ui()
         self.get_pilot_video_systems()
@@ -174,6 +192,7 @@ class LaLliguetaJudges():
         video_system_field = UIField('video_system', "Video System", UIFieldType.SELECT, options=supported_video_systems, value=supported_video_systems[0].value)
         fields.register_pilot_attribute(video_system_field)
 
+
     def getRaceChannels(self):
         frequencies = self._rhapi.race.frequencyset.frequencies
         freq = json.loads(frequencies)
@@ -204,6 +223,9 @@ class LaLliguetaJudges():
         for raceclass in db.raceclasses:
             rc_name = raceclass.name
             print(rc_name)
+            # Get all the pilots involved in this raceclass. They are the only ones that will be used as potential judges for this raceclass
+            pilots_raceclass = self.get_pilots_involved_in_raceclass(raceclass)
+
             # Add section for that class
             ui.register_markdown("judges", "header_"+str(rc_name), "# "+str(rc_name))
 
@@ -232,10 +254,10 @@ class LaLliguetaJudges():
                         heat_pilot.judge.callsign = "NC"
                 else:
                     # First try to assign with same video system
-                    self.find_judge_same_system(heat_pilots, heat_pilots_ids)
+                    self.find_judge_same_system(heat_pilots, heat_pilots_ids, pilots_raceclass)
 
                     # If we couldn't find someone with same video system and we had candidates, randomly select someone
-                    self.find_random_judge(heat_pilots, heat_pilots_ids)
+                    self.find_random_judge(heat_pilots, heat_pilots_ids, pilots_raceclass)
                     
 
                 # Finally draw the table for this heat
