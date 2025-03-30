@@ -11,6 +11,7 @@ As in [La Lligueta](https://lalligueta.com/) we want that as much people as poss
 - Analog
 - DJI
 - DJI O3
+- DJI O4 Race
 - Walksnail
 - Walksnail Race
 - HD Zero
