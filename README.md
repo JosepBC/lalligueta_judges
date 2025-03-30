@@ -17,6 +17,9 @@ Assign a judge to every pilot on every heat with the following algorithm:
 > Given a race class, only the pilots in it are elegible judges. If you have pilots defined in the databes that do not participate in that class they will not be elegible judges.
 > ![Judges assignation](doc/img/Only%20using%20class%20pilots.png)
 
+> [!NOTE]
+> We know that for DJI it depends on the googles you have who you can or can not see. In the future we might add that condition as well. For now it has to be someone with the same exact system as you to be a 1st person judge.
+
 ## Examples
 First define the video system under Format -> Pilot
 
