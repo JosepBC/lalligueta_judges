@@ -215,7 +215,7 @@ class LaLliguetaJudges():
         db = self._rhapi.db
 
         # Panel definition in format page, allways open
-        ui.register_panel("judges", "Judges", "format", open=True)
+        ui.register_panel("judges", "Judges", "format")
 
         raceclass: RaceClass
         print("----------")
