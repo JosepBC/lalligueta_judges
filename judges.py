@@ -186,8 +186,9 @@ class LaLliguetaJudges():
 
 
         supported_video_systems = [UIFieldSelectOption("Analog", "Analog"), UIFieldSelectOption("DJI", "DJI"),
-                                   UIFieldSelectOption("DJIO3", "DJI O3"), UIFieldSelectOption("Walksnail", "Walksnail"),
-                                   UIFieldSelectOption("WalksnailRace", "Walksnail Race"), UIFieldSelectOption("HDZero", "HD Zero")]
+                                   UIFieldSelectOption("DJIO3", "DJI O3"), UIFieldSelectOption("DJIO4Race", "DJI O4 Race"),
+                                   UIFieldSelectOption("Walksnail", "Walksnail"), UIFieldSelectOption("WalksnailRace", "Walksnail Race"),
+                                   UIFieldSelectOption("HDZero", "HD Zero")]
         
         video_system_field = UIField('video_system', "Video System", UIFieldType.SELECT, options=supported_video_systems, value=supported_video_systems[0].value)
         fields.register_pilot_attribute(video_system_field)
