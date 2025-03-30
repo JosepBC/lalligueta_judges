@@ -1,6 +1,6 @@
 # La Lligueta Judges
 
-In the Catalan drone racing league [La Lligueta](https://lalligueta.com/) we have judges for every heat. What that means is that a second pilot is spectating to make sure that all the obstacles are completed sucesfuly. This assignation depends on the video system as we support multiple of them, it's for this that we have created this plugin.
+In the Catalan drone racing league [La Lligueta](https://lalligueta.com/) we have judges for every heat. What that means is that a second pilot is spectating to make sure that all the obstacles are completed successfully. This assignation depends on the video system as we support multiple of them, it's for this that we have created this plugin.
 
 ## Features
 - Define the video system of each pilot when creating the pilots
@@ -30,7 +30,7 @@ Then define your class and it's heats normaly.
 Finaly, go to Format -> Judges and you will see the assignation of the judges.
 
 > [!TIP]
->Go to the [channels adjusted](doc/Channels%20Adjusted.md) document to understand what the options are in the *Channel* column
+> Go to the [channels adjusted](doc/Channels%20Adjusted.md) document to understand what the options are in the *Channel* column
 
 
 ![Judges assignation](doc/img/Judges.png)
