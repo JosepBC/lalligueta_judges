@@ -10,10 +10,16 @@ from Database import PilotAttribute, Pilot, RaceClass, Heat, HeatNode, Profiles,
 from RHAPI import RHAPI
 
 class HeatPilot():
+    class AssignationMethod(Enum):
+        DVR = 0
+        SAME_SYSTEM = 1
+        RANDOM = 2
+
     def __init__(self, pilot: Pilot, channel: str, judge: Pilot):
         self.pilot = pilot
         self.channel = channel
         self.judge = judge
+        self.judge_assignment_method = HeatPilot.AssignationMethod.DVR
 
 class LaLliguetaJudges():
 
@@ -78,10 +84,12 @@ class LaLliguetaJudges():
                 # If we are out of candidates just ask for DVR
                 heat_pilot.judge = Pilot()
                 heat_pilot.judge.callsign = "DVR"
+                heat_pilot.judge_assignment_method = HeatPilot.AssignationMethod.DVR
             else:
                 # Otherwise means that we have found a judge with the same video system
                 heat_pilots_ids.append(judge_pilot.id)
                 heat_pilot.judge = judge_pilot
+                heat_pilot.judge_assignment_method = HeatPilot.AssignationMethod.SAME_SYSTEM
 
     def find_random_judge(self, heat_pilots: list, heat_pilots_ids: list, potential_judges: list):
         heat_pilot: HeatPilot
@@ -97,12 +105,13 @@ class LaLliguetaJudges():
                 # If there are no more pilots available, ask for DVR
                 heat_pilot.judge = Pilot()
                 heat_pilot.judge.callsign = "DVR"
+                heat_pilot.judge_assignment_method = HeatPilot.AssignationMethod.DVR
                 print("We run out of judges in random, DVR for "+heat_pilot.pilot.callsign)
             else:
                 # Judge randomly assigned
                 heat_pilots_ids.append(judge_pilot.id)
                 heat_pilot.judge = judge_pilot
-                heat_pilot.judge.callsign += " (3rd)"
+                heat_pilot.judge_assignment_method = HeatPilot.AssignationMethod.RANDOM
                 print("No judge same video system for "+heat_pilot.pilot.callsign+", but found "+ heat_pilot.judge.callsign)
 
     def draw_table(self, heat_pilots):
@@ -114,15 +123,18 @@ class LaLliguetaJudges():
             pilot_video_system = self._pilot_system[heat_pilot.pilot.callsign]
             pilot = heat_pilot.pilot
             judge = heat_pilot.judge
-
             # If video system is in the correspondence change the freq print to match system
             if pilot_video_system in self._channel_correspondence:
                 if heat_pilot.channel in self._channel_correspondence[pilot_video_system]:
                     # print("Pilot "+pilot.callsign+" raceband channel "+heat_pilot.channel+" may not correspond to it's system " +pilot_video_system)
                     heat_pilot.channel = self._channel_correspondence[pilot_video_system][heat_pilot.channel]
 
-            table_md.append("<tr><td>"+heat_pilot.channel+"</td><td>"+pilot.callsign+"</td><td>"+judge.callsign+"</td><td>"+pilot_video_system+"</td>\n")
-        
+            judge_display = judge.callsign
+            # If judge was randomly selected add the (3rd)
+            if heat_pilot.judge_assignment_method == HeatPilot.AssignationMethod.RANDOM:
+                judge_display = judge.callsign+" (3rd)"
+
+            table_md.append("<tr><td>"+heat_pilot.channel+"</td><td>"+pilot.callsign+"</td><td>"+judge_display+"</td><td>"+pilot_video_system+"</td>\n")
         return table_md
 
     def get_heat_pilots_and_ids(self, heat: Heat, racechannels: list):
