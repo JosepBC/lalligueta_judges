@@ -63,11 +63,19 @@ class LaLliguetaJudges():
         if len(all_possible_judges) == 0:
             return self.JudgeAssignationError.OUT_OF_CANDIDATES
 
-        # Try to assign as judge a pilot with the same video system
+        # The elegible judges are those that have the same system as the pilot
+        elegible_judges = []
+
+        # Filter the possible judges by the same system. Those will be elegible judges for this pilot
         possible_judge: Pilot
         for possible_judge in all_possible_judges:
+            # If the possible judge has the same system as the pilot, it's an elegible judge
             if self._pilot_system[possible_judge.callsign] == self._pilot_system[pilot.callsign]:
-                return possible_judge
+                elegible_judges.append(possible_judge)
+
+        # If we have more than one elegibe judge, randomly select one of them to avoid repeating judges
+        if len(elegible_judges) > 0:
+            return random.choice(elegible_judges)
 
         return self.JudgeAssignationError.NO_JUDGE_SAME_VIDEO_SYSTEM
 
