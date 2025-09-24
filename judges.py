@@ -139,6 +139,11 @@ class LaLliguetaJudges():
                     # print("Pilot "+pilot.callsign+" raceband channel "+heat_pilot.channel+" may not correspond to it's system " +pilot_video_system)
                     channel_display = self._channel_correspondence[pilot_video_system][heat_pilot.channel]
 
+            # Add * if pilot has changed channel from it's previous heat
+            if heat_pilot.changed_channel:
+                channel_display += "*"
+
+
             judge_display = judge.callsign
             # If judge was randomly selected add the (3rd)
             if heat_pilot.judge_assignment_method == HeatPilot.AssignationMethod.RANDOM:
