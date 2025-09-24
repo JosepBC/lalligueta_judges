@@ -20,6 +20,7 @@ class HeatPilot():
         self.channel = channel
         self.judge = judge
         self.judge_assignment_method = HeatPilot.AssignationMethod.DVR
+        self.changed_channel = False
 
 class LaLliguetaJudges():
 
@@ -239,6 +240,7 @@ class LaLliguetaJudges():
         # Panel definition in format page, allways open
         ui.register_panel("judges", "Judges", "format")
 
+        prev_pilot_channel = {}
         raceclass: RaceClass
         print("----------")
         # For each race class
@@ -280,6 +282,16 @@ class LaLliguetaJudges():
 
                     # If we couldn't find someone with same video system and we had candidates, randomly select someone
                     self.find_random_judge(heat_pilots, heat_pilots_ids, pilots_raceclass)
+
+                    heat_pilot: HeatPilot
+                    for heat_pilot in heat_pilots:
+                        # If pilot is in the list, check if it's changed channel
+                        if heat_pilot.pilot.callsign in prev_pilot_channel and prev_pilot_channel[heat_pilot.pilot.callsign] != heat_pilot.channel:
+                            heat_pilot.changed_channel = True
+                            print(heat_pilot.pilot.callsign+" has to change channel!")
+
+                        # Update the previous channel
+                        prev_pilot_channel[heat_pilot.pilot.callsign] = heat_pilot.channel
                     
 
                 # Finally draw the table for this heat
