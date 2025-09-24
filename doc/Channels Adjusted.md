@@ -3,7 +3,7 @@
 For those heats that are configured as auto frequency but they are not seeded yet, we show a *NC* as channel and judge.
 ![](img/Non%20seeded%20auto%20frequency.png)
 
-And once the frequencies are assigned we show the frequency and assign a judge.
+And once the frequencies are assigned we show the frequency and assign a judge. If an * is shown next to the channel name it means that the pilot was in a different channel on the previous heat
 ![](img/Seeded%20auto%20frequency.png)
 
 ## Multiple video systems
