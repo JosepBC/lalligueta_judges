@@ -132,17 +132,18 @@ class LaLliguetaJudges():
             pilot = heat_pilot.pilot
             judge = heat_pilot.judge
             # If video system is in the correspondence change the freq print to match system
+            channel_display = heat_pilot.channel
             if pilot_video_system in self._channel_correspondence:
                 if heat_pilot.channel in self._channel_correspondence[pilot_video_system]:
                     # print("Pilot "+pilot.callsign+" raceband channel "+heat_pilot.channel+" may not correspond to it's system " +pilot_video_system)
-                    heat_pilot.channel = self._channel_correspondence[pilot_video_system][heat_pilot.channel]
+                    channel_display = self._channel_correspondence[pilot_video_system][heat_pilot.channel]
 
             judge_display = judge.callsign
             # If judge was randomly selected add the (3rd)
             if heat_pilot.judge_assignment_method == HeatPilot.AssignationMethod.RANDOM:
                 judge_display = judge.callsign+" (3rd)"
 
-            table_md.append("<tr><td>"+heat_pilot.channel+"</td><td>"+pilot.callsign+"</td><td>"+judge_display+"</td><td>"+pilot_video_system+"</td>\n")
+            table_md.append("<tr><td>"+channel_display+"</td><td>"+pilot.callsign+"</td><td>"+judge_display+"</td><td>"+pilot_video_system+"</td>\n")
         return table_md
 
     def get_heat_pilots_and_ids(self, heat: Heat, racechannels: list):
